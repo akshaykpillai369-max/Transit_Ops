@@ -122,5 +122,23 @@ class Database:
             cursor.execute("SELECT license_number, driver_name FROM Drivers WHERE status = 'Available🟢'")
             return cursor.fetchall()
     
-        
+    def complete_trip(self, trip_id):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            
+             
+            cursor.execute("SELECT vehicle_reg, driver_license FROM Trips WHERE trip_id = ?", (trip_id,))
+            result = cursor.fetchone()
+            
+            if result:
+                vehicle_reg, driver_license = result
+                
+                
+                cursor.execute("UPDATE Trips SET trip_status = 'Completed🟢' WHERE trip_id = ?", (trip_id,))
+                
+                 
+                cursor.execute("UPDATE Vehicles SET status = 'Available🟢' WHERE registration_number = ?", (vehicle_reg,))
+                cursor.execute("UPDATE Drivers SET status = 'Available🟢' WHERE license_number = ?", (driver_license,))
+                
+                conn.commit()
     

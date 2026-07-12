@@ -156,12 +156,19 @@ class Menu:
             for index, trip in enumerate(trips):
                 with cols[index % 3]:
                     with st.container(border=True):
-
                         st.markdown(f"### TRIP ID : #{trips[index][0]}")
-                        st.write(f"**🚛 VEHICLE** : {trips[index][1]}")
+                        st.write(f"**易 VEHICLE** : {trips[index][1]}")
                         st.write(f"**👤 DRIVER** : {trips[index][2]}")
                         st.write(f"**📍 ROUTE** : {trips[index][3]} ➡️ {trips[index][4]}")
                         st.write(f"**📅 DATE** : {trips[index][5]}")
                         st.write(f"**STATUS** : {trips[index][6]}")
+                        
+                        # Add Complete Trip button only if the trip is currently active
+                        if trips[index][6] == 'Dispatched🟡':
+                            # Unique key per button prevents Streamlit from getting confused
+                            if st.button("Mark Completed ✅", key=f"complete_{trips[index][0]}"):
+                                self.db.complete_trip(trips[index][0])
+                                st.success(f"Trip #{trips[index][0]} completed successfully!")
+                                st.rerun()
         else:
             st.info("No active trips scheduled at the moment.")
