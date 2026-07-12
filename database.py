@@ -59,6 +59,17 @@ class Database:
                 )
             """)
 
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS FuelLogs (
+                log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                registration_number TEXT,
+                liters REAL NOT NULL,
+                cost REAL NOT NULL,
+                log_date TEXT NOT NULL,
+                FOREIGN KEY (registration_number) REFERENCES Vehicles(registration_number)
+            );
+            """)
+
             conn.commit()
 
     
@@ -210,4 +221,30 @@ class Database:
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT log_id, registration_number, description, cost, start_date FROM MaintenanceLogs WHERE status = 'Open'")
+            return cursor.fetchall()
+        
+
+    
+    def add_fuel_log(self, reg_no, liters, cost, log_date):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO FuelLogs (registration_number, liters, cost, log_date)
+            VALUES (?, ?, ?, ?)
+            """
+            cursor.execute(query, (reg_no, liters, cost, log_date))
+            conn.commit()
+
+    def get_vehicle_financials(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            SELECT 
+                v.registration_number, 
+                v.model_name,
+                COALESCE((SELECT SUM(f.cost) FROM FuelLogs f WHERE f.registration_number = v.registration_number), 0) as total_fuel,
+                COALESCE((SELECT SUM(m.cost) FROM MaintenanceLogs m WHERE m.registration_number = v.registration_number), 0) as total_maint
+            FROM Vehicles v
+            """
+            cursor.execute(query)
             return cursor.fetchall()

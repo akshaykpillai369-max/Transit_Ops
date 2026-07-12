@@ -78,3 +78,6 @@ elif choice == "Trip Dispatch":
 
 elif choice == "Maintenance":
     menu.manage_maintenance()
+
+elif choice == "Fuel & Expenses":
+    menu.manage_expenses()

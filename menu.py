@@ -9,7 +9,7 @@ class Menu:
         st.sidebar.title("🚚 TransitOps Menu")
         choice = st.sidebar.radio(
             label= "Navigate to:",
-            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance"]
+            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance", "Fuel & Expenses"]
         )
         return choice
     
@@ -42,22 +42,16 @@ class Menu:
         st.subheader("Current Fleet Registry🚚")
         vehicles = self.db.get_all_vehicles()
 
-        cols = st.columns(3) 
-
         if vehicles:
-
+            cols = st.columns(3)
             for index, vehicle in enumerate(vehicles):
-                
-
                 with cols[index % 3]: 
-                    
-                    with st.container(border= True) :
-
-                        st.markdown(f"### MODEL : {vehicles[index][1]}")
-                        st.write(f"**REG NUMBER** : {vehicles[index][0]}")
-                        st.write(f"**TYPE** : {vehicles[index][2]}")
-                        st.write(f"**CAPACITY(kg)** : {vehicles[index][3]}")
-                        st.write(f"**CURRENT STATUS** : {vehicles[index][4]}")
+                    with st.container(border=True):
+                        st.markdown(f"### MODEL : {vehicle[1]}")
+                        st.write(f"**REG NUMBER** : {vehicle[0]}")
+                        st.write(f"**TYPE** : {vehicle[2]}")
+                        st.write(f"**CAPACITY(kg)** : {vehicle[3]}")
+                        st.write(f"**CURRENT STATUS** : {vehicle[4]}")
         else:
             st.info("No Vehicles Registered Yet.")
 
@@ -91,21 +85,15 @@ class Menu:
         st.subheader("Registered Drivers")
         drivers = self.db.get_all_drivers()
 
-        cols = st.columns(3) 
-
         if drivers:
-
+            cols = st.columns(3)
             for index, driver in enumerate(drivers):
-                
-
                 with cols[index % 3]: 
-                    
-                    with st.container(border= True) :
-
-                        st.markdown(f"### NAME : {drivers[index][0]}")
-                        st.write(f"**LICENSE NUMBER** : {drivers[index][3]}")
-                        st.write(f"**EXPIRY** : {drivers[index][1]}")
-                        st.write(f"**CURRENT STATUS** : {drivers[index][2]}")
+                    with st.container(border=True):
+                        st.markdown(f"### NAME : {driver[0]}")
+                        st.write(f"**LICENSE NUMBER** : {driver[3]}")
+                        st.write(f"**EXPIRY** : {driver[1]}")
+                        st.write(f"**CURRENT STATUS** : {driver[2]}")
         else:
             st.info("**No Drivers Registered Yet.**")
 
@@ -118,10 +106,8 @@ class Menu:
         
         st.subheader("Dispatch New Route")
         with st.form("trip_form", clear_on_submit=True):
-            
-           
             vehicle_options = [f"{v[0]} | {v[1]} (Max: {v[2]}kg)" for v in available_vehicles]
-            driver_options = [f"{d[0]} ({d[1]})" for d in available_drivers]
+            driver_options = [f"{d[0]} | {d[1]}" for d in available_drivers]
             
             selected_v = st.selectbox("Assign Available Vehicle", options=vehicle_options)
             selected_d = st.selectbox("Assign Available Driver", options=driver_options)
@@ -135,26 +121,22 @@ class Menu:
             
             if submit:
                 if selected_v and selected_d and route_from and route_to:
-                    
-              
+                     
                     vehicle_reg = selected_v.split(" | ")[0].strip()
-                    driver_license = selected_d.split(" ")[0].strip()
+                    driver_license = selected_d.split(" | ")[0].strip()
                     date_str = dispatch_date.strftime("%Y-%m-%d")
                     
-                  
                     try:
                         max_capacity = int(selected_v.split("(Max: ")[1].split("kg)")[0])
                     except:
                         max_capacity = 0
 
-                 
                     if cargo_weight > max_capacity:
-                        st.error(f"❌ Dispatch Denied: Cargo weight ({cargo_weight}kg) exceeds the vehicle's maximum load capacity ({max_capacity}kg)!")
+                        st.error(f"❌ Dispatch Denied: Cargo weight ({cargo_weight}kg) exceeds capacity ({max_capacity}kg)!")
                     else:
                         try:
                             self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
                             st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
-                            import time
                             time.sleep(2)
                             st.rerun()
                         except Exception as e:
@@ -162,12 +144,11 @@ class Menu:
                 else:
                     st.warning("Please fill out all route details. Ensure you have an available vehicle and driver.")
 
-         
         st.subheader("Active Shipments & Routes")
         trips = self.db.get_all_trips()
         
         if trips:
-            cols = st.columns(3)
+            cols = st.columns(3)  
             for index, trip in enumerate(trips):
                 with cols[index % 3]:
                     with st.container(border=True):
@@ -182,7 +163,6 @@ class Menu:
                             if st.button("Mark Completed ✅", key=f"complete_{trip[0]}"):
                                 self.db.complete_trip(trip[0])
                                 st.success(f"Trip #{trip[0]} completed successfully!")
-                                import time
                                 time.sleep(2)
                                 st.rerun()
         else:
@@ -242,4 +222,51 @@ class Menu:
                                 st.success(f"Vehicle {reg} released back to operational service!")
                                 time.sleep(2)
                                 st.rerun()
+    
+
+    def manage_expenses(self):
+        st.title("⛽ Fuel & Expense Management")
+        
+        tab1, tab2 = st.tabs(["📝 Log Fuel Purchase", "📊 Fleet Expense Summary"])
+        
+        with tab1:
+            st.subheader("Record Fuel Receipt")
+            all_vehicles = self.db.get_all_vehicles()
             
+            if not all_vehicles:
+                st.info("Please register a vehicle first.")
+            else:
+                with st.form("fuel_form", clear_on_submit=True):
+                    vehicle_options = [f"{v[0]} ({v[1]})" for v in all_vehicles]
+                    selected_v = st.selectbox("Select Vehicle", options=vehicle_options)
+                    
+                    liters = st.number_input("Fuel Volume (Liters)", min_value=1, step=10)
+                    cost = st.number_input("Total Cost (₹)", min_value=0, step=1000)
+                    log_date = st.date_input("Transaction Date")
+                    
+                    submit = st.form_submit_button("Save Fuel Log")
+                    if submit:
+                        reg_no = selected_v.split(" ")[0]
+                        self.db.add_fuel_log(reg_no, liters, cost, log_date.strftime("%Y-%m-%d"))
+                        st.success(f"Fuel log successfully recorded for {reg_no}!")
+                        import time
+                        time.sleep(2)
+                        st.rerun()
+                        
+        with tab2:
+            st.subheader("Operational Expense Ledger")
+            financials = self.db.get_vehicle_financials()
+            
+            if not financials:
+                st.info("No logs on record.")
+            else:
+                for row in financials:
+                    reg, model, fuel_cost, maint_cost = row
+                    total_combined = fuel_cost + maint_cost
+                    
+                    with st.container(border=True):
+                        c1, c2, c3, c4 = st.columns(4)
+                        c1.markdown(f"**{reg}**  \n*{model}*")
+                        c2.metric("Fuel Costs", f"₹{fuel_cost:,.2f}")
+                        c3.metric("Maintenance Costs", f"₹{maint_cost:,.2f}")
+                        c4.metric("Total Cost", f"₹{total_combined:,.2f}")
