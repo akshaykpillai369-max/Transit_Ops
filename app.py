@@ -9,14 +9,13 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize Database and Menu controllers
 def init_db():
     return Database()
 
 db = init_db()
 menu = Menu(db)
 
-# --- ROLE-BASED AUTHENTICATION SECTION ---
+
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.user_role = None
@@ -69,20 +68,20 @@ if not st.session_state.authenticated:
 * **Financial Analyst:** `analyst` / `cash123`""")
     st.stop() 
 
-# --- LOGOUT BUTTON IN SIDEBAR ---
+ 
 if st.sidebar.button("Log Out 🚪", use_container_width=True):
     st.session_state.authenticated = False
     st.session_state.user_role = None
     st.rerun()
 
-# --- RBAC VIEW NAVIGATION INTERACTION ---
+ 
 choice = menu.show_sidebar()
 
-# Define explicit view restrictions based on active role profile
+ 
 manager_only_views = ["Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance"]
 analyst_only_views = ["Fuel & Expenses", "Reports & Analytics"]
 
-# If the logged-in user is 'Admin', they completely bypass these authorization walls
+ 
 if st.session_state.user_role != "Admin":
     if choice in manager_only_views and st.session_state.user_role != "Fleet Manager":
         st.error(f"🚫 Access Denied: The '{choice}' pane is explicitly restricted to Fleet Manager clearance level only.")
@@ -92,7 +91,7 @@ if st.session_state.user_role != "Admin":
         st.error(f"🚫 Access Denied: The '{choice}' pane is explicitly restricted to Financial Analyst clearance level only.")
         st.stop()
 
-# --- ROUTING LOGIC BLOCK ---
+ 
 if choice == "Dashboard":
     st.title("📊 Fleet Dashboard")
     st.caption(f"Active Session Security Context: **{st.session_state.user_role}**")
