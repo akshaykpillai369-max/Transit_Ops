@@ -55,4 +55,10 @@ class Database:
             cursor.execute(query, (license_no, name, expiry))
             conn.commit()
 
+    def get_all_vehicles(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM Vehicles")
+            return cursor.fetchall()
+
     
