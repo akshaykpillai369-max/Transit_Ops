@@ -119,7 +119,8 @@ class Menu:
         st.subheader("Dispatch New Route")
         with st.form("trip_form", clear_on_submit=True):
             
-            vehicle_options = [f"{v[0]} ({v[1]})" for v in available_vehicles]
+           
+            vehicle_options = [f"{v[0]} | {v[1]} (Max: {v[2]}kg)" for v in available_vehicles]
             driver_options = [f"{d[0]} ({d[1]})" for d in available_drivers]
             
             selected_v = st.selectbox("Assign Available Vehicle", options=vehicle_options)
@@ -127,24 +128,37 @@ class Menu:
             
             route_from = st.text_input("Origin City (e.g., Kochi)")
             route_to = st.text_input("Destination City (e.g., Bangalore)")
+            cargo_weight = st.number_input("Cargo Weight (in kg)", min_value=1, step=50)
             dispatch_date = st.date_input("Dispatch Date")
             
             submit = st.form_submit_button("Confirm Dispatch 🚀")
             
             if submit:
                 if selected_v and selected_d and route_from and route_to:
-                
-                    vehicle_reg = selected_v.split(" ")[0]
-                    driver_license = selected_d.split(" ")[0]
+                    
+              
+                    vehicle_reg = selected_v.split(" | ")[0].strip()
+                    driver_license = selected_d.split(" ")[0].strip()
                     date_str = dispatch_date.strftime("%Y-%m-%d")
                     
+                  
                     try:
-                        self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
-                        st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
-                        time.sleep(2) 
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error dispatching trip: {e}")
+                        max_capacity = int(selected_v.split("(Max: ")[1].split("kg)")[0])
+                    except:
+                        max_capacity = 0
+
+                 
+                    if cargo_weight > max_capacity:
+                        st.error(f"❌ Dispatch Denied: Cargo weight ({cargo_weight}kg) exceeds the vehicle's maximum load capacity ({max_capacity}kg)!")
+                    else:
+                        try:
+                            self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
+                            st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
+                            import time
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error dispatching trip: {e}")
                 else:
                     st.warning("Please fill out all route details. Ensure you have an available vehicle and driver.")
 
@@ -157,23 +171,75 @@ class Menu:
             for index, trip in enumerate(trips):
                 with cols[index % 3]:
                     with st.container(border=True):
-                        st.markdown(f"### TRIP ID : #{trips[index][0]}")
-                        st.write(f"**易 VEHICLE** : {trips[index][1]}")
-                        st.write(f"**👤 DRIVER** : {trips[index][2]}")
-                        st.write(f"**📍 ROUTE** : {trips[index][3]} ➡️ {trips[index][4]}")
-                        st.write(f"**📅 DATE** : {trips[index][5]}")
-                        st.write(f"**STATUS** : {trips[index][6]}")
+                        st.markdown(f"### TRIP ID : #{trip[0]}")
+                        st.write(f"**🚛 VEHICLE** : {trip[1]}")
+                        st.write(f"**👤 DRIVER** : {trip[2]}")
+                        st.write(f"**📍 ROUTE** : {trip[3]} ➡️ {trip[4]}")
+                        st.write(f"**📅 DATE** : {trip[5]}")
+                        st.write(f"**STATUS** : {trip[6]}")
                         
-                        
-                        if trips[index][6] == 'Dispatched🟡':
-                           
-                            if st.button("Mark Completed ✅", key=f"complete_{trips[index][0]}"):
-                                self.db.complete_trip(trips[index][0])
-                                st.success(f"Trip #{trips[index][0]} completed successfully!")
+                        if trip[6] == 'Dispatched🟡':
+                            if st.button("Mark Completed ✅", key=f"complete_{trip[0]}"):
+                                self.db.complete_trip(trip[0])
+                                st.success(f"Trip #{trip[0]} completed successfully!")
+                                import time
                                 time.sleep(2)
                                 st.rerun()
         else:
             st.info("No active trips scheduled at the moment.")
 
+    def manage_maintenance(self):
+        st.title("🔧 Maintenance & Shop Log")
+        
+        tab1, tab2 = st.tabs(["⚠️ Send Vehicle to Shop", "✅ Active Workshop Logs"])
+        
+        with tab1:
+            st.subheader("Log New Maintenance Order")
+           
+            available_vehicles = self.db.get_available_vehicles()
+            
+            if not available_vehicles:
+                st.info("No available vehicles to send to maintenance.")
+            else:
+                with st.form("maintenance_form", clear_on_submit=True):
+                
+                    vehicle_options = [f"{v[0]} - {v[1]}" for v in available_vehicles]
+                    selected_v = st.selectbox("Select Vehicle", vehicle_options)
+                    
+                    desc = st.text_area("Issue Description (e.g., Oil Change, Brake Replacement)")
+                    cost = st.number_input("Estimated Cost", min_value=0.0, step=500.0)
+                    date = st.date_input("Service Date")
+                    
+                    submit_m = st.form_submit_button("Send to Workshop")
+                    if submit_m and desc:
+                        reg_num = selected_v.split(" - ")[0]
+                        try:
+                            self.db.add_to_maintenance(reg_num, desc, cost, str(date))
+                            st.success(f"Vehicle {reg_num} status changed to 'In Shop'!")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error logging maintenance: {e}")
 
+        with tab2:
+            st.subheader("Vehicles Currently In Shop")
+            open_logs = self.db.get_open_maintenance()
+            
+            if not open_logs:
+                st.success("🎉 Workshop clear! No vehicles currently under maintenance.")
+            else:
+                for log in open_logs:
+                    log_id, reg, desc, cost, start_date = log
+                    with st.container(border=True):
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            st.markdown(f"**Vehicle:** {reg}")
+                            st.markdown(f"**Issue:** {desc}")
+                            st.caption(f"Started: {start_date} | Est. Cost: {cost}")
+                        with col2:
+                            if st.button("Complete & Release", key=f"rel_{log_id}"):
+                                self.db.close_maintenance(log_id, reg)
+                                st.success(f"Vehicle {reg} released back to operational service!")
+                                time.sleep(2)
+                                st.rerun()
             

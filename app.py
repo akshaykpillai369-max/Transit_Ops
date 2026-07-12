@@ -75,3 +75,6 @@ elif choice == "Manage Drivers":
     
 elif choice == "Trip Dispatch":
     menu.add_trip()
+
+elif choice == "Maintenance":
+    menu.manage_maintenance()
