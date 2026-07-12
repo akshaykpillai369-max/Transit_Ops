@@ -61,4 +61,8 @@ class Database:
             cursor.execute("SELECT * FROM Vehicles")
             return cursor.fetchall()
 
-    
+    def get_all_drivers(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM Drivers")
+            return cursor.fetchall()
