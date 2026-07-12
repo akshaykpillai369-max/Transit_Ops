@@ -107,3 +107,61 @@ class Menu:
                         st.write(f"**CURRENT STATUS** : {drivers[index][2]}")
         else:
             st.info("**No Drivers Registered Yet.**")
+
+    
+    def add_trip(self):
+        st.title("🔀 Trip Dispatch & Logistics")
+        
+        available_vehicles = self.db.get_available_vehicles()
+        available_drivers = self.db.get_available_drivers()
+        
+        st.subheader("Dispatch New Route")
+        with st.form("trip_form", clear_on_submit=True):
+            
+            vehicle_options = [f"{v[0]} ({v[1]})" for v in available_vehicles]
+            driver_options = [f"{d[0]} ({d[1]})" for d in available_drivers]
+            
+            selected_v = st.selectbox("Assign Available Vehicle", options=vehicle_options)
+            selected_d = st.selectbox("Assign Available Driver", options=driver_options)
+            
+            route_from = st.text_input("Origin City (e.g., Kochi)")
+            route_to = st.text_input("Destination City (e.g., Bangalore)")
+            dispatch_date = st.date_input("Dispatch Date")
+            
+            submit = st.form_submit_button("Confirm Dispatch 🚀")
+            
+            if submit:
+                if selected_v and selected_d and route_from and route_to:
+                
+                    vehicle_reg = selected_v.split(" ")[0]
+                    driver_license = selected_d.split(" ")[0]
+                    date_str = dispatch_date.strftime("%Y-%m-%d")
+                    
+                    try:
+                        self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
+                        st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
+                         
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error dispatching trip: {e}")
+                else:
+                    st.warning("Please fill out all route details. Ensure you have an available vehicle and driver.")
+
+         
+        st.subheader("Active Shipments & Routes")
+        trips = self.db.get_all_trips()
+        
+        if trips:
+            cols = st.columns(3)
+            for index, trip in enumerate(trips):
+                with cols[index % 3]:
+                    with st.container(border=True):
+
+                        st.markdown(f"### TRIP ID : #{trips[index][0]}")
+                        st.write(f"**🚛 VEHICLE** : {trips[index][1]}")
+                        st.write(f"**👤 DRIVER** : {trips[index][2]}")
+                        st.write(f"**📍 ROUTE** : {trips[index][3]} ➡️ {trips[index][4]}")
+                        st.write(f"**📅 DATE** : {trips[index][5]}")
+                        st.write(f"**STATUS** : {trips[index][6]}")
+        else:
+            st.info("No active trips scheduled at the moment.")
