@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 
 class Menu:
     def __init__(self, db):
@@ -8,7 +9,7 @@ class Menu:
         st.sidebar.title("🚚 TransitOps Menu")
         choice = st.sidebar.radio(
             label= "Navigate to:",
-            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch"]
+            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance"]
         )
         return choice
     
@@ -140,7 +141,7 @@ class Menu:
                     try:
                         self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
                         st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
-                         
+                        time.sleep(2) 
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error dispatching trip: {e}")
@@ -169,6 +170,10 @@ class Menu:
                             if st.button("Mark Completed ✅", key=f"complete_{trips[index][0]}"):
                                 self.db.complete_trip(trips[index][0])
                                 st.success(f"Trip #{trips[index][0]} completed successfully!")
+                                time.sleep(2)
                                 st.rerun()
         else:
             st.info("No active trips scheduled at the moment.")
+
+
+            
