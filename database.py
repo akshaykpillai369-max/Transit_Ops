@@ -47,6 +47,18 @@ class Database:
             );
             """)
 
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS MaintenanceLogs (
+                    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    registration_number TEXT,
+                    description TEXT,
+                    cost REAL,
+                    status TEXT, -- 'Open' or 'Closed'
+                    start_date TEXT,
+                    FOREIGN KEY (registration_number) REFERENCES Vehicles(registration_number)
+                )
+            """)
+
             conn.commit()
 
     
