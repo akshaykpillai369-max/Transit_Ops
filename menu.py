@@ -29,9 +29,14 @@ class Menu:
                 if reg_no and model:
                     try:
                         self.db.add_vehicle(reg_no.upper().strip(), model, v_type, capacity)
-                        st.success(f"Vehicle {reg_no} successfully added to the fleet!")
+                        st.success(f"Vehicle {reg_no.upper().strip()} successfully added to the fleet!")
+                        time.sleep(1)
+                        st.rerun()
                     except Exception as e:
-                        st.error(f"Error adding vehicle: {e} (Check for duplicate numbers)")
+                        if "UNIQUE constraint failed" in str(e):
+                            st.error(f"❌ Registration Denied: A vehicle with Registration Number '{reg_no.upper().strip()}' already exists in the system.")
+                        else:
+                            st.error(f"Error adding vehicle: {e}")
                 else:
                     st.warning("Please fill out all fields.")
             
@@ -60,7 +65,7 @@ class Menu:
         st.title("👤 Driver Directory")
         import datetime
         
-        # Driver Registration Form
+        
         st.subheader("Register New Driver")
         with st.form("driver_form", clear_on_submit=True):
             license_no = st.text_input("License Number")
@@ -78,10 +83,14 @@ class Menu:
                         try:
                             self.db.add_driver(license_no.upper().strip(), name, expiry_str)
                             st.success(f"Driver {name} registered successfully!")
-                            time.sleep(2)
+                            time.sleep(1)
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Error adding driver: {e}")
+                            
+                            if "UNIQUE constraint failed" in str(e):
+                                st.error(f"❌ Registration Denied: A driver with License Number '{license_no.upper().strip()}' is already registered.")
+                            else:
+                                st.error(f"Error adding driver: {e}")
                 else:
                     st.warning("Please fill out all fields.")
                     
@@ -304,10 +313,10 @@ class Menu:
             reg, model, v_type, liters, fuel_cost, maint_cost, trips = row
             
             total_op_cost = fuel_cost + maint_cost
-            estimated_distance = trips * 150 # Mock assumption of baseline route distance (150km)
+            estimated_distance = trips * 150 
             fuel_efficiency = round(estimated_distance / liters, 2) if liters > 0 else 0.0
             
-            # ROI Formula: (Revenue - Expenses) / Assumed Asset Baseline
+            
             mock_revenue = trips * 12000
             mock_acquisition_cost = 2500000 
             roi = round(((mock_revenue - total_op_cost) / mock_acquisition_cost) * 100, 2)
