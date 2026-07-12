@@ -19,7 +19,7 @@ class Database:
                 model_name TEXT NOT NULL,
                 vehicle_type TEXT NOT NULL,
                 max_capacity INTEGER NOT NULL,
-                status TEXT DEFAULT 'Available'
+                status TEXT DEFAULT 'Available🟢'
             );
             """)
 
@@ -29,7 +29,7 @@ class Database:
                 license_number TEXT PRIMARY KEY,
                 driver_name TEXT NOT NULL,
                 expiry_date TEXT NOT NULL,
-                status TEXT DEFAULT 'Available'
+                status TEXT DEFAULT 'Available🟢'
             );
             """)
             conn.commit()
@@ -64,5 +64,5 @@ class Database:
     def get_all_drivers(self):
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM Drivers")
+            cursor.execute("SELECT driver_name, expiry_date, status, license_number FROM Drivers")
             return cursor.fetchall()
