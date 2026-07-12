@@ -82,6 +82,33 @@ class Database:
             cursor.execute("SELECT driver_name, expiry_date, status, license_number FROM Drivers")
             return cursor.fetchall()
         
+    def dispatch_trip(self, vehicle_reg, driver_license, route_from, route_to, date_str):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            
+            query = """
+            INSERT INTO Trips (vehicle_reg, driver_license, route_from, route_to, dispatch_date)
+            VALUES (?, ?, ?, ?, ?)
+            """
+            cursor.execute(query, (vehicle_reg, driver_license, route_from, route_to, date_str))
+            
+    
+            cursor.execute("UPDATE Vehicles SET status = 'On Trip🔴' WHERE registration_number = ?", (vehicle_reg,))
+            cursor.execute("UPDATE Drivers SET status = 'On Trip🔴' WHERE license_number = ?", (driver_license,))
+            
+            conn.commit()
+
+    def get_all_trips(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            SELECT t.trip_id, v.model_name, d.driver_name, t.route_from, t.route_to, t.dispatch_date, t.trip_status
+            FROM Trips t
+            JOIN Vehicles v ON t.vehicle_reg = v.registration_number
+            JOIN Drivers d ON t.driver_license = d.license_number
+            """
+            cursor.execute(query)
+            return cursor.fetchall()
 
     
         
