@@ -9,7 +9,7 @@ class Menu:
         st.sidebar.title("🚚 TransitOps Menu")
         choice = st.sidebar.radio(
             label= "Navigate to:",
-            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance", "Fuel & Expenses"]
+            options= ["Dashboard", "Manage Vehicles", "Manage Drivers", "Trip Dispatch", "Maintenance", "Fuel & Expenses", "Reports & Analytics"]
         )
         return choice
     
@@ -270,3 +270,57 @@ class Menu:
                         c2.metric("Fuel Costs", f"₹{fuel_cost:,.2f}")
                         c3.metric("Maintenance Costs", f"₹{maint_cost:,.2f}")
                         c4.metric("Total Cost", f"₹{total_combined:,.2f}")
+
+    
+
+    def manage_reports(self):
+        import pandas as pd
+        st.title("📊 Reports & Performance Analytics")
+        
+        raw_data = self.db.get_analytics_report()
+        
+        if not raw_data:
+            st.info("No system metrics recorded yet to process analytical tracking data.")
+            return
+
+        processed_rows = []
+        for row in raw_data:
+            reg, model, v_type, liters, fuel_cost, maint_cost, trips = row
+            
+            total_op_cost = fuel_cost + maint_cost
+            estimated_distance = trips * 150 # Mock assumption of baseline route distance (150km)
+            fuel_efficiency = round(estimated_distance / liters, 2) if liters > 0 else 0.0
+            
+            # ROI Formula: (Revenue - Expenses) / Assumed Asset Baseline
+            mock_revenue = trips * 12000
+            mock_acquisition_cost = 2500000 
+            roi = round(((mock_revenue - total_op_cost) / mock_acquisition_cost) * 100, 2)
+            
+            processed_rows.append({
+                "Vehicle Reg": reg,
+                "Model Name": model,
+                "Type": v_type,
+                "Completed Trips": trips,
+                "Est Distance (km)": estimated_distance,
+                "Fuel Liters": liters,
+                "Total Op Cost (₹)": total_op_cost,
+                "Efficiency (km/L)": fuel_efficiency,
+                "Estimated ROI (%)": f"{roi}%"
+            })
+            
+        df = pd.DataFrame(processed_rows)
+        
+        st.subheader("🚚 Fleet Efficiency & ROI Summary Table")
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        
+        st.subheader("💾 Export Document Records")
+        csv_data = df.to_csv(index=False).encode('utf-8')
+        
+        st.download_button(
+            label="📥 Download Analytics Report as CSV",
+            data=csv_data,
+            file_name="transitops_fleet_analytics.csv",
+            mime="text/csv"
+        )

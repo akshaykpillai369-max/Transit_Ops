@@ -81,3 +81,6 @@ elif choice == "Maintenance":
 
 elif choice == "Fuel & Expenses":
     menu.manage_expenses()
+
+elif choice == "Reports & Analytics":
+    menu.manage_reports()

@@ -248,3 +248,23 @@ class Database:
             """
             cursor.execute(query)
             return cursor.fetchall()
+    
+    def get_analytics_report(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            SELECT 
+                v.registration_number,
+                v.model_name,
+                v.vehicle_type,
+                COALESCE(SUM(f.liters), 0) as total_liters,
+                COALESCE(SUM(f.cost), 0) as total_fuel_cost,
+                COALESCE((SELECT SUM(m.cost) FROM MaintenanceLogs m WHERE m.registration_number = v.registration_number), 0) as total_maint_cost,
+                COUNT(DISTINCT t.trip_id) as completed_trips
+            FROM Vehicles v
+            LEFT JOIN FuelLogs f ON v.registration_number = f.registration_number
+            LEFT JOIN Trips t ON v.registration_number = t.vehicle_reg AND t.trip_status = 'Completed🟢'
+            GROUP BY v.registration_number
+            """
+            cursor.execute(query)
+            return cursor.fetchall()
