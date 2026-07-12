@@ -5,7 +5,7 @@ class Database:
     def __init__(self, db_name= "transport.db"):
         
         self.db_name = db_name
-        self.create_table
+        self.create_table()
 
     def create_table(self):
 
@@ -33,3 +33,16 @@ class Database:
             );
             """)
             conn.commit()
+
+    
+    def add_vehicle(self, reg_no, model, v_type, capacity):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO Vehicles (registration_number, model_name, vehicle_type, max_capacity, status)
+            VALUES (?, ?, ?, ?, 'Available')
+            """
+            cursor.execute(query, (reg_no, model, v_type, capacity))
+            conn.commit()
+
+    
