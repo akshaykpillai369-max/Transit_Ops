@@ -32,6 +32,21 @@ class Database:
                 status TEXT DEFAULT 'Available🟢'
             );
             """)
+
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Trips (
+                trip_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_reg TEXT NOT NULL,
+                driver_license TEXT NOT NULL,
+                route_from TEXT NOT NULL,
+                route_to TEXT NOT NULL,
+                dispatch_date TEXT NOT NULL,
+                trip_status TEXT DEFAULT 'Dispatched🟡',
+                FOREIGN KEY (vehicle_reg) REFERENCES Vehicles(registration_number),
+                FOREIGN KEY (driver_license) REFERENCES Drivers(license_number)
+            );
+            """)
+
             conn.commit()
 
     
@@ -66,3 +81,8 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("SELECT driver_name, expiry_date, status, license_number FROM Drivers")
             return cursor.fetchall()
+        
+
+    
+        
+    
