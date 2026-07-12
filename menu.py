@@ -50,13 +50,22 @@ class Menu:
         if vehicles:
             cols = st.columns(3)
             for index, vehicle in enumerate(vehicles):
+                status_raw = vehicle[4]
+                
+                if "Available" in status_raw:
+                    status_display = f":green[{status_raw}]"
+                elif "Trip" in status_raw:
+                    status_display = f":orange[{status_raw}]"
+                else:
+                    status_display = f":red[🔧 {status_raw}]"  
+                
                 with cols[index % 3]: 
                     with st.container(border=True):
                         st.markdown(f"### MODEL : {vehicle[1]}")
                         st.write(f"**REG NUMBER** : {vehicle[0]}")
                         st.write(f"**TYPE** : {vehicle[2]}")
                         st.write(f"**CAPACITY(kg)** : {vehicle[3]}")
-                        st.write(f"**CURRENT STATUS** : {vehicle[4]}")
+                        st.markdown(f"**CURRENT STATUS** : {status_display}")
         else:
             st.info("No Vehicles Registered Yet.")
 
@@ -130,44 +139,47 @@ class Menu:
         available_drivers = self.db.get_available_drivers()
         
         st.subheader("Dispatch New Route")
-        with st.form("trip_form", clear_on_submit=True):
-            vehicle_options = [f"{v[0]} | {v[1]} (Max: {v[2]}kg)" for v in available_vehicles]
-            driver_options = [f"{d[0]} | {d[1]}" for d in available_drivers]
-            
-            selected_v = st.selectbox("Assign Available Vehicle", options=vehicle_options)
-            selected_d = st.selectbox("Assign Available Driver", options=driver_options)
-            
-            route_from = st.text_input("Origin City (e.g., Kochi)")
-            route_to = st.text_input("Destination City (e.g., Bangalore)")
-            cargo_weight = st.number_input("Cargo Weight (in kg)", min_value=1, step=50)
-            dispatch_date = st.date_input("Dispatch Date")
-            
-            submit = st.form_submit_button("Confirm Dispatch 🚀")
-            
-            if submit:
-                if selected_v and selected_d and route_from and route_to:
-                     
-                    vehicle_reg = selected_v.split(" | ")[0].strip()
-                    driver_license = selected_d.split(" | ")[0].strip()
-                    date_str = dispatch_date.strftime("%Y-%m-%d")
-                    
-                    try:
-                        max_capacity = int(selected_v.split("(Max: ")[1].split("kg)")[0])
-                    except:
-                        max_capacity = 0
-
-                    if cargo_weight > max_capacity:
-                        st.error(f"❌ Dispatch Denied: Cargo weight ({cargo_weight}kg) exceeds capacity ({max_capacity}kg)!")
-                    else:
+        
+        if not available_vehicles or not available_drivers:
+            st.error("⚠️ **Cannot Dispatch:** You must have at least one Available Vehicle and one Compliant Driver in the fleet pool.")
+        else:
+            with st.form("trip_form", clear_on_submit=True):
+                vehicle_options = [f"{v[0]} | {v[1]} (Max: {v[2]}kg)" for v in available_vehicles]
+                driver_options = [f"{d[0]} | {d[1]}" for d in available_drivers]
+                
+                selected_v = st.selectbox("Assign Available Vehicle", options=vehicle_options)
+                selected_d = st.selectbox("Assign Available Driver", options=driver_options)
+                
+                route_from = st.text_input("Origin City (e.g., Kochi)")
+                route_to = st.text_input("Destination City (e.g., Bangalore)")
+                cargo_weight = st.number_input("Cargo Weight (in kg)", min_value=1, step=50)
+                dispatch_date = st.date_input("Dispatch Date")
+                
+                submit = st.form_submit_button("Confirm Dispatch 🚀")
+                
+                if submit:
+                    if selected_v and selected_d and route_from and route_to:
+                        vehicle_reg = selected_v.split(" | ")[0].strip()
+                        driver_license = selected_d.split(" | ")[0].strip()
+                        date_str = dispatch_date.strftime("%Y-%m-%d")
+                        
                         try:
-                            self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
-                            st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
-                            time.sleep(2)
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error dispatching trip: {e}")
-                else:
-                    st.warning("Please fill out all route details. Ensure you have an available vehicle and driver.")
+                            max_capacity = int(selected_v.split("(Max: ")[1].split("kg)")[0])
+                        except:
+                            max_capacity = 0
+
+                        if cargo_weight > max_capacity:
+                            st.error(f"❌ Dispatch Denied: Cargo weight ({cargo_weight}kg) exceeds capacity ({max_capacity}kg)!")
+                        else:
+                            try:
+                                self.db.dispatch_trip(vehicle_reg, driver_license, route_from.strip(), route_to.strip(), date_str)
+                                st.success(f"Trip successfully dispatched from {route_from} to {route_to}!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error dispatching trip: {e}")
+                    else:
+                        st.warning("Please fill out all route details.")
 
         st.subheader("Active Shipments & Routes")
         trips = self.db.get_all_trips()
@@ -266,7 +278,7 @@ class Menu:
                     selected_v = st.selectbox("Select Vehicle", options=vehicle_options)
                     
                     liters = st.number_input("Fuel Volume (Liters)", min_value=1, step=10)
-                    cost = st.number_input("Total Cost (₹)", min_value=0, step=1000)
+                    cost = st.number_input("Total Cost (₹)", min_value=0, step=100, help="Enter the total amount paid in INR")
                     log_date = st.date_input("Transaction Date")
                     
                     submit = st.form_submit_button("Save Fuel Log")
