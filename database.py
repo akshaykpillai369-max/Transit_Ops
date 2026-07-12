@@ -40,7 +40,7 @@ class Database:
             cursor = conn.cursor()
             query = """
             INSERT INTO Vehicles (registration_number, model_name, vehicle_type, max_capacity, status)
-            VALUES (?, ?, ?, ?, 'Available')
+            VALUES (?, ?, ?, ?, 'Available🟢')
             """
             cursor.execute(query, (reg_no, model, v_type, capacity))
             conn.commit()
@@ -50,7 +50,7 @@ class Database:
             cursor = conn.cursor()
             query = """
             INSERT INTO Drivers (license_number, driver_name, expiry_date, status)
-            VALUES (?, ?, ?, 'Available')
+            VALUES (?, ?, ?, 'Available🟢')
             """
             cursor.execute(query, (license_no, name, expiry))
             conn.commit()

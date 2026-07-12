@@ -94,16 +94,16 @@ class Menu:
 
         if drivers:
 
-            for index, vehicle in enumerate(drivers):
+            for index, driver in enumerate(drivers):
                 
 
                 with cols[index % 3]: 
                     
                     with st.container(border= True) :
 
-                        st.markdown(f"### NAME : {drivers[index][1]}")
-                        st.write(f"**LICENSE NUMBER** : {drivers[index][0]}")
-                        st.write(f"**EXPIRY** : {drivers[index][2]}")
-                        st.write(f"**CURRENT STATUS** : {drivers[index][3]}")
+                        st.markdown(f"### NAME : {drivers[index][0]}")
+                        st.write(f"**LICENSE NUMBER** : {drivers[index][3]}")
+                        st.write(f"**EXPIRY** : {drivers[index][1]}")
+                        st.write(f"**CURRENT STATUS** : {drivers[index][2]}")
         else:
             st.info("**No Drivers Registered Yet.**")
