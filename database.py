@@ -110,6 +110,17 @@ class Database:
             cursor.execute(query)
             return cursor.fetchall()
 
+    def get_available_vehicles(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT registration_number, model_name FROM Vehicles WHERE status = 'Available🟢'")
+            return cursor.fetchall()
+
+    def get_available_drivers(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT license_number, driver_name FROM Drivers WHERE status = 'Available🟢'")
+            return cursor.fetchall()
     
         
     
