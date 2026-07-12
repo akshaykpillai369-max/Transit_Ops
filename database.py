@@ -181,4 +181,32 @@ class Database:
                 "available_drivers": available_drivers,
                 "total_trips": total_trips
             }
-    
+        
+    def add_to_maintenance(self, registration_number, description, cost, start_date):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+             
+            cursor.execute("""
+                INSERT INTO MaintenanceLogs (registration_number, description, cost, status, start_date)
+                VALUES (?, ?, ?, 'Open', ?)
+            """, (registration_number, description, cost, start_date))
+            
+            
+            cursor.execute("UPDATE Vehicles SET status = 'In Shop' WHERE registration_number = ?", (registration_number,))
+            conn.commit()
+
+    def close_maintenance(self, log_id, registration_number):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+           
+            cursor.execute("UPDATE MaintenanceLogs SET status = 'Closed' WHERE log_id = ?", (log_id,))
+            
+            
+            cursor.execute("UPDATE Vehicles SET status = 'Available🟢' WHERE registration_number = ?", (registration_number,))
+            conn.commit()
+
+    def get_open_maintenance(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT log_id, registration_number, description, cost, start_date FROM MaintenanceLogs WHERE status = 'Open'")
+            return cursor.fetchall()
