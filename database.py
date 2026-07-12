@@ -141,9 +141,18 @@ class Database:
             return cursor.fetchall()
 
     def get_available_drivers(self):
+        import datetime
+        current_date = datetime.date.today().strftime("%Y-%m-%d")
+        
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT license_number, driver_name FROM Drivers WHERE status = 'Available🟢'")
+    
+            query = """
+            SELECT license_number, driver_name 
+            FROM Drivers 
+            WHERE status = 'Available🟢' AND expiry_date >= ?
+            """
+            cursor.execute(query, (current_date,))
             return cursor.fetchall()
     
     def complete_trip(self, trip_id):

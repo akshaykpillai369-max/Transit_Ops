@@ -58,8 +58,9 @@ class Menu:
 
     def add_driver(self):
         st.title("👤 Driver Directory")
+        import datetime
         
-        #Driver Registration Form
+        # Driver Registration Form
         st.subheader("Register New Driver")
         with st.form("driver_form", clear_on_submit=True):
             license_no = st.text_input("License Number")
@@ -69,31 +70,46 @@ class Menu:
             submit = st.form_submit_button("Add Driver")
             if submit:
                 if license_no and name:
-                    expiry_str = expiry.strftime("%Y-%m-%d")
-                    try:
-                        self.db.add_driver(license_no.upper().strip(), name, expiry_str)
-                        st.success(f"Driver {name} registered successfully!")
-                    except Exception as e:
-                        st.error(f"Error adding driver: {e}")
+        
+                    if expiry < datetime.date.today():
+                        st.error(f"❌ Registration Denied: Driver's license expired on {expiry.strftime('%Y-%m-%d')}!")
+                    else:
+                        expiry_str = expiry.strftime("%Y-%m-%d")
+                        try:
+                            self.db.add_driver(license_no.upper().strip(), name, expiry_str)
+                            st.success(f"Driver {name} registered successfully!")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error adding driver: {e}")
                 else:
                     st.warning("Please fill out all fields.")
                     
         self.get_all_drivers()
-
     
     def get_all_drivers(self):
         st.subheader("Registered Drivers")
+        import datetime
         drivers = self.db.get_all_drivers()
+        current_date = datetime.date.today().strftime("%Y-%m-%d")
 
         if drivers:
             cols = st.columns(3)
             for index, driver in enumerate(drivers):
+                 
+                is_expired = driver[1] < current_date
+                display_status = "⚠️ EXPIRED / NON-COMPLIANT" if is_expired else driver[2]
+                
                 with cols[index % 3]: 
                     with st.container(border=True):
                         st.markdown(f"### NAME : {driver[0]}")
                         st.write(f"**LICENSE NUMBER** : {driver[3]}")
                         st.write(f"**EXPIRY** : {driver[1]}")
-                        st.write(f"**CURRENT STATUS** : {driver[2]}")
+                        
+                        if is_expired:
+                            st.markdown(f"**CURRENT STATUS** : :red[{display_status}]")
+                        else:
+                            st.write(f"**CURRENT STATUS** : {display_status}")
         else:
             st.info("**No Drivers Registered Yet.**")
 
