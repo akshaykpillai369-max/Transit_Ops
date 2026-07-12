@@ -141,4 +141,32 @@ class Database:
                 cursor.execute("UPDATE Drivers SET status = 'Available🟢' WHERE license_number = ?", (driver_license,))
                 
                 conn.commit()
+
+    
+    def get_dashboard_stats(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT COUNT(*) FROM Vehicles")
+            total_vehicles = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM Vehicles WHERE status = 'On Trip🔴'")
+            active_vehicles = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM Drivers")
+            total_drivers = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM Drivers WHERE status = 'Available🟢'")
+            available_drivers = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM Trips")
+            total_trips = cursor.fetchone()[0]
+            
+            return {
+                "total_vehicles": total_vehicles,
+                "active_vehicles": active_vehicles,
+                "total_drivers": total_drivers,
+                "available_drivers": available_drivers,
+                "total_trips": total_trips
+            }
     

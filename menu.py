@@ -163,9 +163,9 @@ class Menu:
                         st.write(f"**📅 DATE** : {trips[index][5]}")
                         st.write(f"**STATUS** : {trips[index][6]}")
                         
-                        # Add Complete Trip button only if the trip is currently active
+                        
                         if trips[index][6] == 'Dispatched🟡':
-                            # Unique key per button prevents Streamlit from getting confused
+                           
                             if st.button("Mark Completed ✅", key=f"complete_{trips[index][0]}"):
                                 self.db.complete_trip(trips[index][0])
                                 st.success(f"Trip #{trips[index][0]} completed successfully!")
