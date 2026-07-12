@@ -45,4 +45,14 @@ class Database:
             cursor.execute(query, (reg_no, model, v_type, capacity))
             conn.commit()
 
+    def add_driver(self, license_no, name, expiry):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO Drivers (license_number, driver_name, expiry_date, status)
+            VALUES (?, ?, ?, 'Available')
+            """
+            cursor.execute(query, (license_no, name, expiry))
+            conn.commit()
+
     
