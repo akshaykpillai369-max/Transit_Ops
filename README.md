@@ -30,7 +30,6 @@ TransitOps is a simple fleet management system made using Streamlit and SQLite. 
 ## How to Run
 
 - cd transitops-platform
-- pip install -r requirements.txt
 - streamlit run app.py
 
 That's it, now you deployed it locally
