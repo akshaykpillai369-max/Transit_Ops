@@ -1,6 +1,8 @@
 # TransitOps – Fleet Management System
 
 TransitOps is a simple fleet management system made using Streamlit and SQLite. It helps to manage vehicles, drivers, shipments, fuel expenses and vehicle maintenance in one place.
+<img width="1527" height="655" alt="image" src="https://github.com/user-attachments/assets/0c970f15-3cdc-4587-87df-2af38e53376d" />
+
 
 **Live Demo:** https://transitops.streamlit.app/
 
