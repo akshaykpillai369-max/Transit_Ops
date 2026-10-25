@@ -35,3 +35,6 @@ TransitOps is a simple fleet management system made using Streamlit and SQLite. 
 - streamlit run app.py
 
 That's it, now you deployed it locally
+
+# License
+This project is licensed under the [Akshay] License - see the LICENSE.md file for details
